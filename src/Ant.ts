@@ -3,22 +3,18 @@ import * as MapTile from "./MapTile.js";
 import * as AntMovement from "./AntMovement.js";
 import * as Canvas from "./Canvas.js";
 import * as Pheromone from "./PheromoneHandle.js";
+import { MapObject } from "./MapObject.js";
 
-export class Ant{
-    Pos:Type.Vector2;
+export class Ant extends MapObject{
     Movement:AntMovement.AntMovement;
     PheromoneHandle:Pheromone.PheromoneHandle;
 
-    constructor(Pos:Type.Vector2){
-        this.Pos = Pos;
+    constructor(TilePos:Type.Vector2){
+        super(TilePos);
         this.Movement = new AntMovement.AntMovement(this);
         this.PheromoneHandle = new Pheromone.PheromoneHandle(this);
 
         this.PheromoneHandle.Init();
-    }
-
-    GetTilePos():Type.Vector2{
-        return MapTile.WorldToTilePos(this.Pos);
     }
 
     ChangePos(DeltaX:number, DeltaY:number):void{

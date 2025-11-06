@@ -1,6 +1,6 @@
 import { GetCanvasContext } from "./Canvas.js";
 import * as Type from "./Type.js";
-const TileSize = { X: 30, Y: 30 };
+const TileSize = { X: 20, Y: 20 };
 export function GetTileSize() {
     return TileSize;
 }
@@ -51,6 +51,10 @@ export class NormalTile extends MapTile {
     IsPassable() {
         return true;
     }
+    Update() {
+        this.ChangeTargetPheromone(-0.02333);
+        this.ChangeHomingPheromone(-0.02333);
+    }
 }
 export class Obstacle extends MapTile {
     ChangeTargetPheromone(Delta) {
@@ -71,5 +75,7 @@ export class Obstacle extends MapTile {
     }
     IsPassable() {
         return false;
+    }
+    Update() {
     }
 }

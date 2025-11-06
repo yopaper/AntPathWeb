@@ -2,7 +2,7 @@ import { Vector2 } from "./Type.js";
 import { GetCanvasContext } from "./Canvas.js";
 import * as Type from "./Type.js";
 
-const TileSize:Vector2 = {X:30, Y:30};
+const TileSize:Vector2 = {X:20, Y:20};
 
 export function GetTileSize():Vector2{
     return TileSize;
@@ -46,6 +46,8 @@ export abstract class MapTile{
     abstract Draw():void;
 
     abstract IsPassable():boolean;
+
+    abstract Update():void;
 }
 
 export class NormalTile extends MapTile{
@@ -75,6 +77,11 @@ export class NormalTile extends MapTile{
     IsPassable(): boolean {
         return true;
     }
+
+    Update(): void {
+        this.ChangeTargetPheromone(-0.02333);
+        this.ChangeHomingPheromone(-0.02333);
+    }
 }
 
 export class Obstacle extends MapTile{
@@ -102,5 +109,8 @@ export class Obstacle extends MapTile{
 
     IsPassable(): boolean {
         return false;
+    }
+    Update(): void {
+        
     }
 }
