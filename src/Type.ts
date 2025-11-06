@@ -36,11 +36,15 @@ export const Left = {X:-1, Y:0};
 export const Up = {X:0, Y:1};
 export const Down = {X:0, Y:-1};
 
+export function Vector2ToKey(Vector2:Vector2):string{
+    return `${Vector2.X},${Vector2.Y}`;
+}
+
 export function GetPheromoneColor(TargetPheromone:number, HomingPheromone:number):string{
-    var TargetRate = 1 - TargetPheromone * (TargetPheromone+50);
-    var HomingRate = 1 - HomingPheromone * (HomingPheromone+50);
-    var R = ~~(255 * TargetRate);
-    var G = ~~(255 * HomingRate);
+    var TargetRate = 1 - TargetPheromone / (TargetPheromone+10);
+    var HomingRate = 1 - HomingPheromone / (HomingPheromone+10);
+    var R = Math.floor(255 * TargetRate);
+    var G = Math.floor(255 * HomingRate);
     var B = G;
     return `rgb(${R}, ${G}, ${B})`;
 }

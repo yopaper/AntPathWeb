@@ -1,48 +1,35 @@
-import * as Ant from "./Ant.js";
 import * as Type from "./Type.js";
 import * as MapTile from "./MapTile.js";
 import * as GameMap from "./GameMap.js";
-import * as Debug from "./Debug.js";
-
-type OnMovementTilePosChanged = (NewPos:Type.Vector2, OldPos:Type.Vector2, IsHoming:boolean)=>void;
-
-export class AntMovement{
-    Owner:Ant.Ant;
-    TargetTilePos:Type.Vector2={X:0, Y:0};
-    TargetWorldPos:Type.Vector2={X:0, Y:0};
-    Direction:Type.Vector2;
-    IsHoming:boolean=false;
-    OnTilePosChangedDelegate:OnMovementTilePosChanged[] = [];
-    Speed:number = 5;
-
-    constructor(Owner:Ant.Ant){
+export class AntMovement {
+    constructor(Owner) {
+        this.TargetTilePos = { X: 0, Y: 0 };
+        this.TargetWorldPos = { X: 0, Y: 0 };
+        this.IsHoming = false;
+        this.OnTilePosChangedDelegate = [];
+        this.Speed = 5;
         this.Owner = Owner;
         this.TargetTilePos = Owner.GetTilePos();
         this.TargetWorldPos = MapTile.GetTileCenter(Owner.GetTilePos());
         this.Direction = Type.GetRandomDirection();
         console.log(`Direction: ${this.Direction.X}, ${this.Direction.Y}`);
     }
-
-    PickNextTarget():void{
+    PickNextTarget() {
         console.log("PickNextTarget");
-
         const MapInstance = GameMap.GetInstance();
         const Rotator = Type.GetDirectionRotator(this.Direction, this.TargetTilePos);
-
-        const PickPheromone = (PheromoneGetter:(MapTile:MapTile.MapTile)=>number):Type.Vector2=>{
+        const PickPheromone = (PheromoneGetter) => {
             var Rotator = Type.GetDirectionRotator(this.Direction, this.TargetTilePos);
             const MapInstance = GameMap.GetInstance();
-
             var PheromoneSum = 0;
-            var PosList:Type.Vector2[] = [];
-            var PheromoneList:number[] = [];
-
-            const CalPheromoneValue = (TilePos:Type.Vector2, Rate:number, Base:number):void=>{
+            var PosList = [];
+            var PheromoneList = [];
+            const CalPheromoneValue = (TilePos, Rate, Base) => {
                 var Tile = MapInstance.GetTile(TilePos);
-                if(!Tile){
+                if (!Tile) {
                     return;
                 }
-                if(!Tile.IsPassable()){
+                if (!Tile.IsPassable()) {
                     return;
                 }
                 var PheromoneValue = PheromoneGetter(Tile);
@@ -52,100 +39,91 @@ export class AntMovement{
                 PheromoneList.push(PheromoneValue + PheromoneSum);
                 PheromoneSum += PheromoneValue;
             };
-
             CalPheromoneValue(Rotator.ForwardPos, 1, 1);
             CalPheromoneValue(Rotator.LeftPos, 1, 1);
             CalPheromoneValue(Rotator.RightPos, 1, 1);
-
-            // 根據 Pheromone 權重取得目標座標
-            if( PosList.length > 0 ){
+            if (PosList.length > 0) {
                 console.log(PosList);
                 console.log(PheromoneList);
                 console.log(PheromoneSum);
                 var Random = Math.random() * PheromoneSum;
                 console.log(Random);
-                var OutTilePos:Type.Vector2 = {X:0, Y:0};
-                PheromoneList.forEach((Pheromone, Index)=>{
-                    if(Random<=Pheromone){
+                var OutTilePos = { X: 0, Y: 0 };
+                PheromoneList.forEach((Pheromone, Index) => {
+                    if (Random <= Pheromone) {
                         OutTilePos = PosList[Index];
                     }
                 });
                 console.log(Type.Vector2ToKey(OutTilePos));
                 return OutTilePos;
             }
-            
-            if(MapInstance.IsPassable(Rotator.BackwardPos)){
+            if (MapInstance.IsPassable(Rotator.BackwardPos)) {
                 return Rotator.Backward;
             }
             return this.TargetTilePos;
         };
-
-        const PickTargetPheromone = ():Type.Vector2=>{
-            return PickPheromone((Tile)=>{
+        const PickTargetPheromone = () => {
+            return PickPheromone((Tile) => {
                 return Tile.GetTargetPheromone();
             });
         };
-
-        const PickHomingPheromone = ():Type.Vector2=>{
-        return PickPheromone((Tile)=>{
+        const PickHomingPheromone = () => {
+            return PickPheromone((Tile) => {
                 return Tile.GetHomingPheromone();
             });
         };
-
-        if(Math.random()<0.9 && MapInstance.IsPassable(Rotator.ForwardPos)){
+        if (Math.random() < 0.9 && MapInstance.IsPassable(Rotator.ForwardPos)) {
             this.SetTilePos(Rotator.ForwardPos);
-        }else if(Math.random()<0.5 && MapInstance.IsPassable(Rotator.RightPos)){
+        }
+        else if (Math.random() < 0.5 && MapInstance.IsPassable(Rotator.RightPos)) {
             this.SetTilePos(Rotator.RightPos);
-        }else if(MapInstance.IsPassable(Rotator.LeftPos)){
+        }
+        else if (MapInstance.IsPassable(Rotator.LeftPos)) {
             this.SetTilePos(Rotator.LeftPos);
-        }else if(MapInstance.IsPassable(Rotator.BackwardPos)){
-             this.SetTilePos(Rotator.BackwardPos);
+        }
+        else if (MapInstance.IsPassable(Rotator.BackwardPos)) {
+            this.SetTilePos(Rotator.BackwardPos);
         }
     }
-
-    SetTilePos(TilePos:Type.Vector2):void{
-        if(this.TargetTilePos.X==TilePos.X && this.TargetTilePos.Y==TilePos.Y){
+    SetTilePos(TilePos) {
+        if (this.TargetTilePos.X == TilePos.X && this.TargetTilePos.Y == TilePos.Y) {
             return;
         }
-        if( Math.abs(TilePos.X - this.TargetTilePos.X) + Math.abs(TilePos.Y - this.TargetTilePos.Y)>1 ){
+        if (Math.abs(TilePos.X - this.TargetTilePos.X) + Math.abs(TilePos.Y - this.TargetTilePos.Y) > 1) {
             return;
         }
-        this.OnTilePosChangedDelegate.forEach((Delegate)=>{
+        this.OnTilePosChangedDelegate.forEach((Delegate) => {
             Delegate(TilePos, this.TargetTilePos, this.IsHoming);
         });
-        
-        this.Direction = {X: TilePos.X - this.TargetTilePos.X, Y: TilePos.Y - this.TargetTilePos.Y};
+        this.Direction = { X: TilePos.X - this.TargetTilePos.X, Y: TilePos.Y - this.TargetTilePos.Y };
         this.TargetTilePos = TilePos;
         this.TargetWorldPos = MapTile.GetTileCenter(TilePos);
         console.log(`Set Target Tile Pos: ${this.TargetTilePos.X}, ${this.TargetTilePos.Y}`);
     }
-
-    Update():void{
-        const IsReachTarget = ():boolean=>{
-            return Math.abs(this.Owner.Pos.X - this.TargetWorldPos.X)+
-            Math.abs(this.Owner.Pos.Y - this.TargetWorldPos.Y)<=10;
+    Update() {
+        const IsReachTarget = () => {
+            return Math.abs(this.Owner.Pos.X - this.TargetWorldPos.X) +
+                Math.abs(this.Owner.Pos.Y - this.TargetWorldPos.Y) <= 10;
         };
-
-        const MoveToTarget = ():void=>{
+        const MoveToTarget = () => {
             var DeltaX = this.TargetWorldPos.X - this.Owner.Pos.X;
             var DeltaY = this.TargetWorldPos.Y - this.Owner.Pos.Y;
-            if(DeltaX!=0){
+            if (DeltaX != 0) {
                 DeltaX = DeltaX / Math.abs(DeltaX);
             }
-            if(DeltaY!=0){
+            if (DeltaY != 0) {
                 DeltaY = DeltaY / Math.abs(DeltaY);
             }
             var DeltaSum = Math.abs(DeltaX) + Math.abs(DeltaY);
-            if(DeltaSum==0){
+            if (DeltaSum == 0) {
                 return;
             }
             DeltaX = DeltaX * this.Speed / DeltaSum;
             DeltaY = DeltaY * this.Speed / DeltaSum;
             this.Owner.ChangePos(DeltaX, DeltaY);
         };
-
         MoveToTarget();
-        if(IsReachTarget()){
+        if (IsReachTarget()) {
             this.PickNextTarget();
         }
     }

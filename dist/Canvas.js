@@ -6,6 +6,16 @@ export function GetCanvas() {
 export function GetCanvasContext() {
     return CanvasContext;
 }
+export function ClearCanvas() {
+    if (!Canvas) {
+        return;
+    }
+    if (!CanvasContext) {
+        return;
+    }
+    CanvasContext.fillStyle = "#000";
+    CanvasContext.fillRect(0, 0, Canvas.width, Canvas.height);
+}
 export function Init() {
     window.addEventListener("load", () => {
         Canvas = document.createElement("canvas");

@@ -9,7 +9,7 @@ export function GetTileSize():Vector2{
 }
 
 export function WorldToTilePos(WorldPos:Vector2):Vector2{
-    return {X:Math.floor(WorldPos.X/GetTileSize().X), Y:Math.floor(WorldPos.Y/GetTileSize().Y)};
+    return {X:~~(WorldPos.X/GetTileSize().X), Y:~~(WorldPos.Y/GetTileSize().Y)};
 }
 
 export function GetTileLeftTop(Pos:Vector2):Vector2{
@@ -23,8 +23,13 @@ export function GetTileCenter(Pos:Vector2):Vector2{
 };
 
 export abstract class MapTile{
+    TilePos:Vector2;
     TargetPheromone:number = 0;
     HomingPheromone:number = 0;
+
+    constructor(TilePos:Vector2){
+        this.TilePos = TilePos;
+    }
 
     GetTargetPheromone():number{
         return this.TargetPheromone;
@@ -38,7 +43,7 @@ export abstract class MapTile{
 
     abstract ChangeHomingPheromone(Delta:number):void;
 
-    abstract Draw(Pos:Vector2):void;
+    abstract Draw():void;
 
     abstract IsPassable():boolean;
 }
@@ -53,12 +58,12 @@ export class NormalTile extends MapTile{
         this.HomingPheromone = Math.max( 0, this.HomingPheromone+Delta );
     }
 
-    Draw(Pos: Vector2): void {
+    Draw(): void {
         var Context = GetCanvasContext();
         if(!Context){
             return;
         }
-        var LTPoint = GetTileLeftTop(Pos);
+        var LTPoint = GetTileLeftTop(this.TilePos);
         Context.lineWidth = 2;
         Context.strokeStyle = Type.GrayColor;
         Context.strokeRect(LTPoint.X, LTPoint.Y, GetTileSize().X, GetTileSize().Y);
@@ -81,12 +86,12 @@ export class Obstacle extends MapTile{
         // Do nothing
     }
 
-    Draw(Pos: Vector2): void {
+    Draw(): void {
         var Context = GetCanvasContext();
         if(!Context){
             return;
         }
-        var LTPoint = GetTileLeftTop(Pos);
+        var LTPoint = GetTileLeftTop(this.TilePos);
         Context.lineWidth = 2;
         Context.strokeStyle = Type.GrayColor;
         Context.strokeRect(LTPoint.X, LTPoint.Y, GetTileSize().X, GetTileSize().Y);

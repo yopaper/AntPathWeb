@@ -12,6 +12,17 @@ export function GetCanvasContext():CanvasRenderingContext2D|null
     return CanvasContext;
 }
 
+export function ClearCanvas():void{
+    if(!Canvas){
+        return;
+    }
+    if(!CanvasContext){
+        return;
+    }
+    CanvasContext.fillStyle = "#000";
+    CanvasContext.fillRect(0, 0, Canvas.width, Canvas.height);
+}
+
 export function Init():void
 {
     window.addEventListener("load", () => {

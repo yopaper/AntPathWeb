@@ -1,27 +1,21 @@
-import * as Ant from "./Ant.js";
 import * as GameMap from "./GameMap.js";
-import * as Type from "./Type.js";
-
-export class PheromoneHandle{
-    Owner:Ant.Ant;
-
-    constructor(Owner:Ant.Ant){
+export class PheromoneHandle {
+    constructor(Owner) {
         this.Owner = Owner;
     }
-    
-    Init():void{
+    Init() {
         this.Owner.Movement.OnTilePosChangedDelegate.push(this.OnMovementTilePosChanged);
     }
-
-    OnMovementTilePosChanged(NewPos:Type.Vector2, OldPos:Type.Vector2, IsHoming:boolean):void{
+    OnMovementTilePosChanged(NewPos, OldPos, IsHoming) {
         var MapInstance = GameMap.GetInstance();
         var Tile = MapInstance.GetTile(OldPos);
-        if(!Tile){
+        if (!Tile) {
             return;
         }
-        if(!IsHoming){
+        if (!IsHoming) {
             Tile.ChangeHomingPheromone(1);
-        }else{
+        }
+        else {
             Tile.ChangeTargetPheromone(1);
         }
     }
