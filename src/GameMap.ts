@@ -21,6 +21,13 @@ export class GameMap{
         return this.Tiles.has(Pos);
     }
 
+    GetTile(Pos:Vector2):MapTile|null{
+        if(!this.HasTile(Pos)){
+            return null;
+        }
+        return this.Tiles.get(Pos)as MapTile;
+    }
+
     IsPassable(Pos:Vector2):boolean{
         if(!this.HasTile(Pos)){
             return false;

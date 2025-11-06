@@ -13,6 +13,16 @@ export class GameMap {
     HasTile(Pos) {
         return this.Tiles.has(Pos);
     }
+    IsPassable(Pos) {
+        if (!this.HasTile(Pos)) {
+            return false;
+        }
+        var Tile = this.Tiles.get(Pos);
+        if (!Tile) {
+            return false;
+        }
+        return Tile.IsPassable();
+    }
     Draw() {
         this.Tiles.forEach((Tile, Pos) => {
             Tile.Draw(Pos);

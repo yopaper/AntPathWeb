@@ -16,14 +16,27 @@ export function GetTileLeftTop(Pos:Vector2):Vector2{
     return {X:Pos.X*GetTileSize().X, Y:Pos.Y*GetTileSize().Y};
 }
 
-export abstract class MapTile{
-    Pheromone:number = 0;
+export function GetTileCenter(Pos:Vector2):Vector2{
+    const LeftTopPoint = GetTileLeftTop(Pos);
+    return {X: LeftTopPoint.X + GetTileSize().X/2,
+        Y: LeftTopPoint.Y + GetTileSize().Y/2};
+};
 
-    GetPheromone():number{
-        return this.Pheromone;
+export abstract class MapTile{
+    TargetPheromone:number = 0;
+    HomingPheromone:number = 0;
+
+    GetTargetPheromone():number{
+        return this.TargetPheromone;
     }
 
-    abstract ChangePheromone(Delta:number):void
+    GetHomingPheromone():number{
+        return this.HomingPheromone;
+    }
+
+    abstract ChangeTargetPheromone(Delta:number):void;
+
+    abstract ChangeHomingPheromone(Delta:number):void;
 
     abstract Draw(Pos:Vector2):void;
 
@@ -31,9 +44,15 @@ export abstract class MapTile{
 }
 
 export class NormalTile extends MapTile{
-    ChangePheromone(Delta: number): void {
-        this.Pheromone = Math.max( 0, this.Pheromone+Delta );
+
+    ChangeTargetPheromone(Delta: number): void {
+        this.TargetPheromone = Math.max( 0, this.TargetPheromone+Delta );
     }
+
+    ChangeHomingPheromone(Delta: number): void {
+        this.HomingPheromone = Math.max( 0, this.HomingPheromone+Delta );
+    }
+
     Draw(Pos: Vector2): void {
         var Context = GetCanvasContext();
         if(!Context){
@@ -44,16 +63,21 @@ export class NormalTile extends MapTile{
         Context.strokeStyle = Type.GrayColor;
         Context.strokeRect(LTPoint.X, LTPoint.Y, GetTileSize().X, GetTileSize().Y);
         
-        Context.fillStyle = Type.GetPheromoneColor(this.GetPheromone());
+        Context.fillStyle = Type.GetPheromoneColor(this.GetTargetPheromone(), this.GetHomingPheromone());
         Context.fillRect(LTPoint.X, LTPoint.Y, GetTileSize().X, GetTileSize().Y);
     }
+
     IsPassable(): boolean {
         return true;
     }
 }
 
 export class Obstacle extends MapTile{
-    ChangePheromone(Delta: number): void {
+    ChangeTargetPheromone(Delta: number): void {
+        // Do nothing
+    }
+
+    ChangeHomingPheromone(Delta: number): void {
         // Do nothing
     }
 
