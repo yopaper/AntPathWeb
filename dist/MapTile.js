@@ -1,6 +1,7 @@
 import { GetCanvasContext } from "./Canvas.js";
 import * as Type from "./Type.js";
-const TileSize = { X: 20, Y: 20 };
+import * as PheromoneContainer from "./PheromoneContainer.js";
+const TileSize = { X: 10, Y: 10 };
 export function GetTileSize() {
     return TileSize;
 }
@@ -21,46 +22,31 @@ export class MapTile {
         this.TargetPheromone = 0;
         this.HomingPheromone = 0;
         this.TilePos = TilePos;
+        this.PheromoneContainer = new PheromoneContainer.PheromoneContainer();
     }
-    GetTargetPheromone() {
-        return this.TargetPheromone;
-    }
-    GetHomingPheromone() {
-        return this.HomingPheromone;
+    GetPheromoneContainer() {
+        return this.PheromoneContainer;
     }
 }
 export class NormalTile extends MapTile {
-    ChangeTargetPheromone(Delta) {
-        this.TargetPheromone = Math.max(0, this.TargetPheromone + Delta);
-    }
-    ChangeHomingPheromone(Delta) {
-        this.HomingPheromone = Math.max(0, this.HomingPheromone + Delta);
-    }
     Draw() {
         var Context = GetCanvasContext();
         if (!Context) {
             return;
         }
         var LTPoint = GetTileLeftTop(this.TilePos);
-        Context.lineWidth = 2;
-        Context.strokeStyle = Type.GrayColor;
-        Context.strokeRect(LTPoint.X, LTPoint.Y, GetTileSize().X, GetTileSize().Y);
-        Context.fillStyle = Type.GetPheromoneColor(this.GetTargetPheromone(), this.GetHomingPheromone());
+        Context.fillStyle = Type.GetPheromoneColor(this.GetPheromoneContainer());
         Context.fillRect(LTPoint.X, LTPoint.Y, GetTileSize().X, GetTileSize().Y);
     }
     IsPassable() {
         return true;
     }
     Update() {
-        this.ChangeTargetPheromone(-0.02333);
-        this.ChangeHomingPheromone(-0.02333);
+        this.PheromoneContainer.ChangePheromone(PheromoneContainer.PheromoneType.Target, -0.07333);
+        this.PheromoneContainer.ChangePheromone(PheromoneContainer.PheromoneType.Explore, -0.02333);
     }
 }
 export class Obstacle extends MapTile {
-    ChangeTargetPheromone(Delta) {
-    }
-    ChangeHomingPheromone(Delta) {
-    }
     Draw() {
         var Context = GetCanvasContext();
         if (!Context) {

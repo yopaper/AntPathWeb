@@ -30,6 +30,13 @@ export class GameMap {
         }
         return null;
     }
+    RemoveFood(Food) {
+        var Index = this.Foods.findIndex(X => X == Food);
+        if (Index < 0) {
+            return;
+        }
+        this.Foods.splice(Index, 1);
+    }
     AddTile(Tile) {
         if (this.HasTile(Tile.TilePos)) {
             return;
@@ -45,17 +52,15 @@ export class GameMap {
         }
         return this.Tiles.get(Vector2ToKey(Pos));
     }
-    GetPheromone(Pos, IsHoming = false) {
+    GetPheromone(Pos, Type) {
+        if (!this.IsPassable(Pos)) {
+            return null;
+        }
         var Tile = this.GetTile(Pos);
         if (!Tile) {
-            return -1;
+            return null;
         }
-        if (IsHoming) {
-            return Tile.GetHomingPheromone();
-        }
-        else {
-            return Tile.GetTargetPheromone();
-        }
+        return Tile.GetPheromoneContainer().GetPheromone(Type);
     }
     IsPassable(Pos) {
         if (!this.HasTile(Pos)) {

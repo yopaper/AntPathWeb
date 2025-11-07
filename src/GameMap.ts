@@ -2,6 +2,7 @@ import { Ant } from "./Ant.js";
 import { MapTile } from "./MapTile.js";
 import { Vector2, Vector2ToKey } from "./Type.js";
 import * as Food from "./Food.js";
+import { PheromoneType } from "./PheromoneContainer.js";
 
 var GameMapInstance:GameMap;
 
@@ -41,6 +42,14 @@ export class GameMap{
         return null;
     }
 
+    RemoveFood(Food:Food.Food):void{
+        var Index = this.Foods.findIndex(X=>X==Food);
+        if(Index<0){
+            return;
+        }
+        this.Foods.splice(Index, 1);
+    }
+
     AddTile(Tile:MapTile) {
         if(this.HasTile(Tile.TilePos)){
             return;
@@ -59,16 +68,15 @@ export class GameMap{
         return this.Tiles.get(Vector2ToKey(Pos))as MapTile;
     }
 
-    GetPheromone(Pos:Vector2, IsHoming:boolean=false):number{
+    GetPheromone(Pos:Vector2, Type:PheromoneType):number|null{
+        if(!this.IsPassable(Pos)){
+            return null;
+        }
         var Tile = this.GetTile(Pos);
         if(!Tile){
-            return -1;
+            return null;
         }
-        if(IsHoming){
-            return Tile.GetHomingPheromone();
-        }else{
-            return Tile.GetTargetPheromone();
-        }
+        return Tile.GetPheromoneContainer().GetPheromone(Type);
     }
 
     IsPassable(Pos:Vector2):boolean{

@@ -3,6 +3,8 @@ import * as Type from "./Type.js";
 import * as MapTile from "./MapTile.js";
 import * as GameMap from "./GameMap.js";
 import * as Debug from "./Debug.js";
+import { PheromoneType } from "./PheromoneContainer.js";
+import { Food } from "./Food.js";
 
 type OnMovementTilePosChanged = (NewPos:Type.Vector2, OldPos:Type.Vector2, IsHoming:boolean)=>void;
 type PositionFindingResult = [boolean, Type.Vector2];
@@ -45,22 +47,71 @@ export class AntMovement{
         };
 
         const TryToFindPheromone = ():PositionFindingResult=>{
-            var ForwardPheromone = MapInstance.GetPheromone(Rotator.ForwardPos, this.IsHoming);
-            var RightPheromone = MapInstance.GetPheromone(Rotator.RightPos, this.IsHoming);
-            var LeftPheromone = MapInstance.GetPheromone(Rotator.LeftPos, this.IsHoming);
-            if(ForwardPheromone>0){
+            var ForwardPheromone = MapInstance.GetPheromone(Rotator.ForwardPos, PheromoneType.Target);
+            var RightPheromone = MapInstance.GetPheromone(Rotator.RightPos, PheromoneType.Target);
+            var LeftPheromone = MapInstance.GetPheromone(Rotator.LeftPos, PheromoneType.Target);
+            if(ForwardPheromone){
                 return [true, Rotator.ForwardPos];
             }
-            if(RightPheromone>0 && LeftPheromone>0){
+            if(RightPheromone && LeftPheromone){
                 if(RightPheromone > LeftPheromone){
                     return [true, Rotator.RightPos];
                 }else{
                     return [true, Rotator.LeftPos];
                 }
-            }else if(RightPheromone>0){
+            }else if(RightPheromone){
                 return [true, Rotator.RightPos];
-            }else if(LeftPheromone>0){
+            }else if(LeftPheromone){
                 return [true, Rotator.LeftPos];
+            }
+            return [false, {X:0, Y:0}];
+        };
+
+        const TryToFindExplorePheromone = ():PositionFindingResult=>{
+            console.log("TryToFindExplorePheromone");
+            var ForwardPheromone = MapInstance.GetPheromone(Rotator.ForwardPos, PheromoneType.Explore);
+            var RightPheromone = MapInstance.GetPheromone(Rotator.RightPos, PheromoneType.Explore);
+            var LeftPheromone = MapInstance.GetPheromone(Rotator.LeftPos, PheromoneType.Explore);
+            if(!ForwardPheromone && !RightPheromone && !LeftPheromone){
+                return [false, {X:0, Y:0}];
+            }
+
+            if(ForwardPheromone==0){
+                console.log("Forward is 0");
+                return [true, Rotator.ForwardPos];
+            }
+            if(RightPheromone==0 && LeftPheromone==0){
+                console.log("Right Left are 0");
+                if(Math.random()<0.5){
+                    return[true, Rotator.RightPos];
+                }
+                else{
+                    return[true, Rotator.LeftPos];
+                }
+            }
+            if(RightPheromone==0){
+                return[true, Rotator.RightPos];
+            }
+            if(LeftPheromone==0){
+                return[true, Rotator.LeftPos];
+            }
+            // 以上排除都為0的情況
+            var MinPheromone:number|null = null;
+            var MinPos:Type.Vector2|null = null;
+            if(ForwardPheromone){
+                MinPheromone = ForwardPheromone;
+                MinPos = Rotator.ForwardPos;
+            }
+            if(RightPheromone && (!MinPheromone || RightPheromone<MinPheromone)){
+                MinPheromone = RightPheromone;
+                MinPos = Rotator.RightPos;
+            }
+            if(LeftPheromone && (!MinPheromone || LeftPheromone<MinPheromone)){
+                MinPheromone = LeftPheromone;
+                MinPos = Rotator.LeftPos;
+            }
+            if(MinPos){
+                return [true, MinPos];
             }
             return [false, {X:0, Y:0}];
         };
@@ -87,11 +138,13 @@ export class AntMovement{
             }
             return [false, {X:0, Y:0}];
         };
+
         var [FoodResult, OutPos] = TryToFindFood();
         if(FoodResult){
             this.SetTilePos(OutPos);
             return;
         }
+
         if(Math.random()<0.95){
             var [PheromoneResult, OutPos] = TryToFindPheromone();
             if(PheromoneResult){
@@ -99,6 +152,13 @@ export class AntMovement{
                 return;
             }
         }
+
+        var [ExploreResult, OutPos] = TryToFindExplorePheromone();
+        if(ExploreResult){
+            this.SetTilePos(OutPos);
+            return;
+        }
+
         var [PathResult, OutPos] = TryToFindWithoutPheromone();
         if(PathResult){
             this.SetTilePos(OutPos);
@@ -128,10 +188,10 @@ export class AntMovement{
             Math.abs(this.Owner.Pos.Y - this.TargetWorldPos.Y)<=10;
         };
 
-        const IsReachFood = ():boolean=>{
+        const IsReachFood = ():Food|null=>{
             var OwnerPos = this.Owner.GetTilePos();
             var MapInstance = GameMap.GetInstance();
-            return MapInstance.FindFood(OwnerPos)!=null;
+            return MapInstance.FindFood(OwnerPos);
         };
 
         const MoveToTarget = ():void=>{
@@ -154,9 +214,12 @@ export class AntMovement{
 
         MoveToTarget();
         if(IsReachTarget()){
-            if(IsReachFood()){
-                this.Owner.PheromoneHandle.ApplyPheromone(this.IsHoming);
-                GameMap.GetInstance().RemoveAnt(this.Owner);
+            var Food = IsReachFood();
+            if(Food){
+                this.Owner.PheromoneHandle.ApplyPheromone(PheromoneType.Target);
+                var MapInstance = GameMap.GetInstance();
+                MapInstance.RemoveAnt(this.Owner);
+                Food.BeEated();
             }
             this.PickNextTarget();
         }

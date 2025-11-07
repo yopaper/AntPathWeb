@@ -1,3 +1,4 @@
+import * as PheromoneContainerPack from "./PheromoneContainer.js";
 
 export interface Vector2{
     X:number;
@@ -40,12 +41,14 @@ export function Vector2ToKey(Vector2:Vector2):string{
     return `${Vector2.X},${Vector2.Y}`;
 }
 
-export function GetPheromoneColor(TargetPheromone:number, HomingPheromone:number):string{
+export function GetPheromoneColor(PheromoneContainer:PheromoneContainerPack.PheromoneContainer):string{
+    var TargetPheromone = PheromoneContainer.GetPheromone(PheromoneContainerPack.PheromoneType.Target);
+    var ExplorePheromone = PheromoneContainer.GetPheromone(PheromoneContainerPack.PheromoneType.Explore);
     var TargetRate = 1 - TargetPheromone / (TargetPheromone+10);
-    var HomingRate = 1 - HomingPheromone / (HomingPheromone+10);
+    var ExploreRate = 1 - ExplorePheromone / (ExplorePheromone+10);
     var R = Math.floor(255 * TargetRate);
-    var G = Math.floor(255 * HomingRate);
-    var B = G;
+    var G = Math.floor(255 * ExploreRate);
+    var B = 255;
     return `rgb(${R}, ${G}, ${B})`;
 }
 

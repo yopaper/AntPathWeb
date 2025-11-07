@@ -1,3 +1,4 @@
+import * as PheromoneContainerPack from "./PheromoneContainer.js";
 export const FPS = 20;
 export const DeltaTime = 1000 / FPS;
 export const WhiteColor = "#DDD";
@@ -10,12 +11,14 @@ export const Down = { X: 0, Y: -1 };
 export function Vector2ToKey(Vector2) {
     return `${Vector2.X},${Vector2.Y}`;
 }
-export function GetPheromoneColor(TargetPheromone, HomingPheromone) {
+export function GetPheromoneColor(PheromoneContainer) {
+    var TargetPheromone = PheromoneContainer.GetPheromone(PheromoneContainerPack.PheromoneType.Target);
+    var ExplorePheromone = PheromoneContainer.GetPheromone(PheromoneContainerPack.PheromoneType.Explore);
     var TargetRate = 1 - TargetPheromone / (TargetPheromone + 10);
-    var HomingRate = 1 - HomingPheromone / (HomingPheromone + 10);
+    var ExploreRate = 1 - ExplorePheromone / (ExplorePheromone + 10);
     var R = Math.floor(255 * TargetRate);
-    var G = Math.floor(255 * HomingRate);
-    var B = G;
+    var G = Math.floor(255 * ExploreRate);
+    var B = 255;
     return `rgb(${R}, ${G}, ${B})`;
 }
 export function GetAdjacentPos(Pos) {

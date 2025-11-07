@@ -1,8 +1,9 @@
 import * as GameMap from "./GameMap.js";
+import { PheromoneType } from "./PheromoneContainer.js";
 export class PheromoneHandle {
     constructor(Owner) {
         this.PathQueue = [];
-        this.QueueMax = 10;
+        this.QueueMax = 50;
         this.Owner = Owner;
     }
     Init() {
@@ -14,7 +15,7 @@ export class PheromoneHandle {
             this.PathQueue.shift();
         }
     }
-    ApplyPheromone(IsHoming, MaxPheromone = 10) {
+    ApplyPheromone(PheromoneType, MaxPheromone = 10) {
         var MapInstance = GameMap.GetInstance();
         for (var i = 0; i < this.PathQueue.length; i++) {
             var Pos = this.PathQueue[i];
@@ -23,20 +24,15 @@ export class PheromoneHandle {
             if (!Tile) {
                 continue;
             }
-            if (IsHoming) {
-                Tile.ChangeHomingPheromone(MaxPheromone * Rate);
-            }
-            else {
-                Tile.ChangeTargetPheromone(MaxPheromone * Rate);
-            }
+            Tile.GetPheromoneContainer().ChangePheromone(PheromoneType, MaxPheromone * Rate);
         }
     }
     OnMovementTilePosChanged(NewPos, OldPos, IsHoming) {
         this.PushPos(OldPos);
         var MapInstance = GameMap.GetInstance();
-        var NewPosPheromone = MapInstance.GetPheromone(NewPos, IsHoming);
-        if (MapInstance.GetPheromone(OldPos, IsHoming) <= 0 && NewPosPheromone > 0) {
-            this.ApplyPheromone(IsHoming, NewPosPheromone * 0.966);
+        var Tile = MapInstance.GetTile(OldPos);
+        if (Tile) {
+            Tile.GetPheromoneContainer().ChangePheromone(PheromoneType.Explore, 1);
         }
     }
 }
