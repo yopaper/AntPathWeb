@@ -4,6 +4,7 @@ export class GameMap {
     constructor() {
         this.Ants = [];
         this.Foods = [];
+        this.AntNests = [];
         this.Tiles = new Map();
         GameMapInstance = this;
     }
@@ -62,6 +63,16 @@ export class GameMap {
         }
         return Tile.GetPheromoneContainer().GetPheromone(Type);
     }
+    FindAntNest(TilePos) {
+        for (var i = 0; i < this.AntNests.length; i++) {
+            var Nest = this.AntNests[i];
+            var NestPos = Nest.GetTilePos();
+            if (NestPos.X == TilePos.X && NestPos.Y == TilePos.Y) {
+                return Nest;
+            }
+        }
+        return null;
+    }
     IsPassable(Pos) {
         if (!this.HasTile(Pos)) {
             return false;
@@ -71,6 +82,9 @@ export class GameMap {
             return false;
         }
         return Tile.IsPassable();
+    }
+    AddAntNest(AntNest) {
+        this.AntNests.push(AntNest);
     }
     Draw() {
         this.Tiles.forEach((Tile) => {
@@ -82,6 +96,9 @@ export class GameMap {
         this.Foods.forEach((Food) => {
             Food.Draw();
         });
+        this.AntNests.forEach((Nest) => {
+            Nest.Draw();
+        });
     }
     Update() {
         this.Ants.forEach((Ant) => {
@@ -90,9 +107,12 @@ export class GameMap {
         this.Tiles.forEach((Tile) => {
             Tile.Update();
         });
+        this.AntNests.forEach((Nest) => {
+            Nest.Update();
+        });
     }
 }
-export function GetInstance() {
+export function GetMapInstance() {
     return GameMapInstance;
 }
 export function Init() {

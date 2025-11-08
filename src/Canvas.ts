@@ -27,8 +27,8 @@ export function Init():void
 {
     window.addEventListener("load", () => {
     Canvas = document.createElement("canvas");
-    Canvas.width = 800;
-    Canvas.height = 800;
+    Canvas.width = 1500;
+    Canvas.height = 1500;
     Canvas.style.border = "1px solid black";
     document.body.appendChild(Canvas);
     if(Canvas!=null){

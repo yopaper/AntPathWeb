@@ -1,4 +1,3 @@
-import * as Type from "./Type.js";
 import * as AntMovement from "./AntMovement.js";
 import * as Canvas from "./Canvas.js";
 import * as Pheromone from "./PheromoneHandle.js";
@@ -19,7 +18,12 @@ export class Ant extends MapObject {
             return;
         }
         Context.beginPath();
-        Context.fillStyle = Type.BlackColor;
+        if (this.Movement.IsHoming) {
+            Context.fillStyle = "#D60";
+        }
+        else {
+            Context.fillStyle = "#0A0";
+        }
         Context.arc(this.Pos.X, this.Pos.Y, 4, 0, Math.PI * 2);
         Context.fill();
         Context.closePath();

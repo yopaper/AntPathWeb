@@ -3,12 +3,14 @@ import { MapTile } from "./MapTile.js";
 import { Vector2, Vector2ToKey } from "./Type.js";
 import * as Food from "./Food.js";
 import { PheromoneType } from "./PheromoneContainer.js";
+import { AntNest } from "./AntNest.js";
 
 var GameMapInstance:GameMap;
 
 export class GameMap{
     Ants:Ant[] = [];
     Foods:Food.Food[] = [];
+    AntNests:AntNest[] = [];
     Tiles = new Map<string, MapTile>();
 
     constructor(){
@@ -79,6 +81,17 @@ export class GameMap{
         return Tile.GetPheromoneContainer().GetPheromone(Type);
     }
 
+    FindAntNest(TilePos:Vector2):AntNest|null{
+        for(var i=0; i<this.AntNests.length; i++){
+            var Nest = this.AntNests[i];
+            var NestPos = Nest.GetTilePos();
+            if(NestPos.X==TilePos.X && NestPos.Y==TilePos.Y){
+                return Nest;
+            }
+        }
+        return null;
+    }
+
     IsPassable(Pos:Vector2):boolean{
         if(!this.HasTile(Pos)){
             return false;
@@ -88,6 +101,10 @@ export class GameMap{
             return false;
         }
         return Tile.IsPassable();
+    }
+
+    AddAntNest(AntNest:AntNest):void{
+        this.AntNests.push(AntNest);
     }
 
     Draw():void{
@@ -100,6 +117,9 @@ export class GameMap{
         this.Foods.forEach((Food)=>{
             Food.Draw();
         });
+        this.AntNests.forEach((Nest)=>{
+            Nest.Draw();
+        });
     }
 
     Update():void{
@@ -109,10 +129,13 @@ export class GameMap{
         this.Tiles.forEach((Tile)=>{
             Tile.Update();
         });
+        this.AntNests.forEach((Nest)=>{
+            Nest.Update();
+        });
     }
 }
 
-export function GetInstance():GameMap{
+export function GetMapInstance():GameMap{
     return GameMapInstance;
 }
 

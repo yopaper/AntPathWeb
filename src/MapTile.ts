@@ -3,7 +3,7 @@ import { GetCanvasContext } from "./Canvas.js";
 import * as Type from "./Type.js";
 import * as PheromoneContainer from "./PheromoneContainer.js";
 
-const TileSize:Vector2 = {X:10, Y:10};
+const TileSize:Vector2 = {X:15, Y:15};
 
 export function GetTileSize():Vector2{
     return TileSize;
@@ -62,8 +62,9 @@ export class NormalTile extends MapTile{
     }
 
     Update(): void {
-        this.PheromoneContainer.ChangePheromone(PheromoneContainer.PheromoneType.Target, -0.07333);
-        this.PheromoneContainer.ChangePheromone(PheromoneContainer.PheromoneType.Explore, -0.02333);
+        this.PheromoneContainer.ChangePheromone(PheromoneContainer.PheromoneType.Target, -0.01333);
+        this.PheromoneContainer.ChangePheromone(PheromoneContainer.PheromoneType.Explore, -0.01333);
+        this.PheromoneContainer.ChangePheromone(PheromoneContainer.PheromoneType.Homing, -0.01333);
     }
 }
 

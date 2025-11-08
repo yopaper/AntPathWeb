@@ -42,13 +42,16 @@ export function Vector2ToKey(Vector2:Vector2):string{
 }
 
 export function GetPheromoneColor(PheromoneContainer:PheromoneContainerPack.PheromoneContainer):string{
+    const RateBase = 25;
     var TargetPheromone = PheromoneContainer.GetPheromone(PheromoneContainerPack.PheromoneType.Target);
     var ExplorePheromone = PheromoneContainer.GetPheromone(PheromoneContainerPack.PheromoneType.Explore);
-    var TargetRate = 1 - TargetPheromone / (TargetPheromone+10);
-    var ExploreRate = 1 - ExplorePheromone / (ExplorePheromone+10);
+    var HomingPheromone = PheromoneContainer.GetPheromone(PheromoneContainerPack.PheromoneType.Homing);
+    var TargetRate = 1 - TargetPheromone / (TargetPheromone+RateBase);
+    var ExploreRate = 1 - ExplorePheromone / (ExplorePheromone+RateBase);
+    var HomingRate = 1 - HomingPheromone / (HomingPheromone+RateBase);
     var R = Math.floor(255 * TargetRate);
     var G = Math.floor(255 * ExploreRate);
-    var B = 255;
+    var B = Math.floor(255 * HomingRate);
     return `rgb(${R}, ${G}, ${B})`;
 }
 

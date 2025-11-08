@@ -17,43 +17,65 @@ export class AntMovement {
     }
     PickNextTarget() {
         console.log("PickNextTarget");
-        const MapInstance = GameMap.GetInstance();
+        const MapInstance = GameMap.GetMapInstance();
         const Rotator = Type.GetDirectionRotator(this.Direction, this.TargetTilePos);
+        const GetMaxPheromonePos = (PheromonePositions) => {
+            var MaxPhenomenonPos = null;
+            var MaxPhenomenonValue = null;
+            PheromonePositions.forEach(([Position, Pheromone]) => {
+                if (!Pheromone) {
+                    return;
+                }
+                if (MaxPhenomenonValue == null || MaxPhenomenonValue < Pheromone) {
+                    MaxPhenomenonValue = Pheromone;
+                    MaxPhenomenonPos = Position;
+                }
+            });
+            return MaxPhenomenonPos;
+        };
         const TryToFindFood = () => {
+            return TryToFindMapObject((Pos) => {
+                var MapInstance = GameMap.GetMapInstance();
+                return MapInstance.FindFood(Pos) != null;
+            });
+        };
+        const TryToFindAntNest = () => {
+            return TryToFindMapObject((Pos) => {
+                var MapInstance = GameMap.GetMapInstance();
+                return MapInstance.FindAntNest(Pos) != null;
+            });
+        };
+        const TryToFindMapObject = (ObjectChecker) => {
             var AdjacentPos = Type.GetAdjacentPos(this.TargetTilePos);
             var OutPos = null;
             AdjacentPos.Positions.forEach((Pos) => {
-                if (MapInstance.FindFood(Pos) != null) {
+                if (ObjectChecker(Pos)) {
                     OutPos = Pos;
                 }
             });
-            if (OutPos) {
-                return [true, OutPos];
-            }
-            return [false, { X: 0, Y: 0 }];
+            return OutPos;
         };
-        const TryToFindPheromone = () => {
+        const TryToFindTargetPheromone = () => {
             var ForwardPheromone = MapInstance.GetPheromone(Rotator.ForwardPos, PheromoneType.Target);
             var RightPheromone = MapInstance.GetPheromone(Rotator.RightPos, PheromoneType.Target);
             var LeftPheromone = MapInstance.GetPheromone(Rotator.LeftPos, PheromoneType.Target);
-            if (ForwardPheromone) {
-                return [true, Rotator.ForwardPos];
-            }
-            if (RightPheromone && LeftPheromone) {
-                if (RightPheromone > LeftPheromone) {
-                    return [true, Rotator.RightPos];
-                }
-                else {
-                    return [true, Rotator.LeftPos];
-                }
-            }
-            else if (RightPheromone) {
-                return [true, Rotator.RightPos];
-            }
-            else if (LeftPheromone) {
-                return [true, Rotator.LeftPos];
-            }
-            return [false, { X: 0, Y: 0 }];
+            var Position = GetMaxPheromonePos([
+                [Rotator.ForwardPos, ForwardPheromone],
+                [Rotator.RightPos, RightPheromone],
+                [Rotator.LeftPos, LeftPheromone],
+            ]);
+            return Position;
+        };
+        const TryToFindHomingPheromone = () => {
+            var ForwardPheromone = MapInstance.GetPheromone(Rotator.ForwardPos, PheromoneType.Homing);
+            var RightPheromone = MapInstance.GetPheromone(Rotator.RightPos, PheromoneType.Homing);
+            var LeftPheromone = MapInstance.GetPheromone(Rotator.LeftPos, PheromoneType.Homing);
+            var Position = GetMaxPheromonePos([
+                [Rotator.ForwardPos, ForwardPheromone],
+                [Rotator.RightPos, RightPheromone],
+                [Rotator.LeftPos, LeftPheromone],
+            ]);
+            return Position;
         };
         const TryToFindExplorePheromone = () => {
             console.log("TryToFindExplorePheromone");
@@ -124,22 +146,36 @@ export class AntMovement {
             }
             return [false, { X: 0, Y: 0 }];
         };
-        var [FoodResult, OutPos] = TryToFindFood();
-        if (FoodResult) {
-            this.SetTilePos(OutPos);
+        var MainTargetPos = null;
+        if (this.IsHoming) {
+            MainTargetPos = TryToFindAntNest();
+        }
+        else {
+            MainTargetPos = TryToFindFood();
+        }
+        if (MainTargetPos) {
+            this.SetTilePos(MainTargetPos);
             return;
         }
-        if (Math.random() < 0.95) {
-            var [PheromoneResult, OutPos] = TryToFindPheromone();
-            if (PheromoneResult) {
-                this.SetTilePos(OutPos);
+        if (Math.random() < 0.9) {
+            var PheromonePos = null;
+            if (this.IsHoming) {
+                PheromonePos = TryToFindHomingPheromone();
+            }
+            else {
+                PheromonePos = TryToFindTargetPheromone();
+            }
+            if (PheromonePos) {
+                this.SetTilePos(PheromonePos);
                 return;
             }
         }
-        var [ExploreResult, OutPos] = TryToFindExplorePheromone();
-        if (ExploreResult) {
-            this.SetTilePos(OutPos);
-            return;
+        if (!this.IsHoming) {
+            var [ExploreResult, OutPos] = TryToFindExplorePheromone();
+            if (ExploreResult) {
+                this.SetTilePos(OutPos);
+                return;
+            }
         }
         var [PathResult, OutPos] = TryToFindWithoutPheromone();
         if (PathResult) {
@@ -164,12 +200,17 @@ export class AntMovement {
     Update() {
         const IsReachTarget = () => {
             return Math.abs(this.Owner.Pos.X - this.TargetWorldPos.X) +
-                Math.abs(this.Owner.Pos.Y - this.TargetWorldPos.Y) <= 10;
+                Math.abs(this.Owner.Pos.Y - this.TargetWorldPos.Y) <= 5;
         };
         const IsReachFood = () => {
             var OwnerPos = this.Owner.GetTilePos();
-            var MapInstance = GameMap.GetInstance();
+            var MapInstance = GameMap.GetMapInstance();
             return MapInstance.FindFood(OwnerPos);
+        };
+        const IsReachNest = () => {
+            var OwnerPos = this.Owner.GetTilePos();
+            var MapInstance = GameMap.GetMapInstance();
+            return MapInstance.FindAntNest(OwnerPos) != null;
         };
         const MoveToTarget = () => {
             var DeltaX = this.TargetWorldPos.X - this.Owner.Pos.X;
@@ -190,12 +231,20 @@ export class AntMovement {
         };
         MoveToTarget();
         if (IsReachTarget()) {
-            var Food = IsReachFood();
-            if (Food) {
-                this.Owner.PheromoneHandle.ApplyPheromone(PheromoneType.Target);
-                var MapInstance = GameMap.GetInstance();
-                MapInstance.RemoveAnt(this.Owner);
-                Food.BeEated();
+            if (!this.IsHoming) {
+                var Food = IsReachFood();
+                if (Food) {
+                    this.Owner.PheromoneHandle.ApplyPheromone(PheromoneType.Target);
+                    Food.BeEated();
+                    this.IsHoming = true;
+                }
+            }
+            else {
+                if (IsReachNest()) {
+                    var MapInstance = GameMap.GetMapInstance();
+                    this.Owner.PheromoneHandle.ApplyPheromone(PheromoneType.Homing, 25);
+                    MapInstance.RemoveAnt(this.Owner);
+                }
             }
             this.PickNextTarget();
         }

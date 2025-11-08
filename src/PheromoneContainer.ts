@@ -2,6 +2,7 @@
 export enum PheromoneType{
     Target = 0,
     Explore = 1,
+    Homing = 2,
 }
 
 export class PheromoneContainer{
@@ -13,6 +14,11 @@ export class PheromoneContainer{
             return 0;
         }
         return Value;
+    }
+
+    SetClampPheromone(PheromoneType:PheromoneType, Value:number):void{
+        var OriginalValue = this.GetPheromone(PheromoneType);
+        this.SetPheromone(PheromoneType, Math.max(OriginalValue, Value));
     }
 
     SetPheromone(PheromoneType:PheromoneType, Value:number):void{

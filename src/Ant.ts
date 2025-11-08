@@ -27,7 +27,12 @@ export class Ant extends MapObject{
             return;
         }
         Context.beginPath();
-        Context.fillStyle = Type.BlackColor;
+        if(this.Movement.IsHoming){
+            Context.fillStyle = "#D60";
+        }else{
+            Context.fillStyle = "#0A0";
+        }
+        
         Context.arc(this.Pos.X, this.Pos.Y, 4, 0, Math.PI*2);
         Context.fill();
         Context.closePath();

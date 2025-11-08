@@ -24,7 +24,7 @@ export class PheromoneHandle{
     }
 
     ApplyPheromone(PheromoneType:PheromoneType, MaxPheromone:number=10):void{
-        var MapInstance = GameMap.GetInstance();
+        var MapInstance = GameMap.GetMapInstance();
         for(var i=0;i<this.PathQueue.length; i++){
             var Pos = this.PathQueue[i];
             var Tile = MapInstance.GetTile(Pos);
@@ -32,16 +32,17 @@ export class PheromoneHandle{
             if(!Tile){
                 continue;
             }
-            Tile.GetPheromoneContainer().ChangePheromone(PheromoneType, MaxPheromone*Rate);
+            Tile.GetPheromoneContainer().SetClampPheromone(PheromoneType, MaxPheromone*Rate);
         }
     }
 
     OnMovementTilePosChanged(NewPos:Type.Vector2, OldPos:Type.Vector2, IsHoming:boolean):void{
         this.PushPos(OldPos);
-        var MapInstance = GameMap.GetInstance();
+        var MapInstance = GameMap.GetMapInstance();
         var Tile = MapInstance.GetTile(OldPos);
         if(Tile){
-            Tile.GetPheromoneContainer().ChangePheromone(PheromoneType.Explore, 1);
+            Tile.GetPheromoneContainer().SetClampPheromone(PheromoneType.Explore, 1);
+            Tile.GetPheromoneContainer().ChangePheromone(PheromoneType.Target, -0.1);
         }
     }
 }
